@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
-import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -24,7 +23,6 @@ export default function RootLayout({
     <html lang="en">
       <body className={`antialiased text-white selection:bg-purple-500/30 selection:text-white font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
         {children}
-        <Analytics />
       </body>
     </html>
   )
