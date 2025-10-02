@@ -60,7 +60,9 @@ export default function PublicationDetailsPage({ params }: { params: { id: strin
   }
 
   const publicationFromList = !publication ? allPublications.find((p) => p.id === params.id) : null
-  if (error && !publicationFromList) {
+  const pub = publication || publicationFromList || null
+
+  if (!pub) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#0a1628] via-[#1a1a3e] to-[#2d1b4e] relative overflow-hidden">
         <SpaceBackground />
@@ -80,7 +82,6 @@ export default function PublicationDetailsPage({ params }: { params: { id: strin
     )
   }
 
-  const pub = publication || publicationFromList!
   const categoryMapping = getCategoryMapping(pub.category)
   const CategoryIcon = categoryMapping.icon
 

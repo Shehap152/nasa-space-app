@@ -51,6 +51,8 @@ function Carousel({
   children,
   ...props
 }: React.ComponentProps<'div'> & CarouselProps) {
+  // Count slides defensively – production can render before data arrives
+  const slidesCount = React.Children.count(children)
   const [carouselRef, api] = useEmblaCarousel(
     {
       ...opts,
@@ -96,11 +98,12 @@ function Carousel({
   React.useEffect(() => {
     if (!api) return
     onSelect(api)
-    api.on('reInit', onSelect)
-    api.on('select', onSelect)
+    api.on?.('reInit', onSelect)
+    api.on?.('select', onSelect)
 
     return () => {
-      api?.off('select', onSelect)
+      api?.off?.('select', onSelect)
+      api?.off?.('reInit', onSelect)
     }
   }, [api, onSelect])
 
@@ -126,7 +129,13 @@ function Carousel({
         data-slot="carousel"
         {...props}
       >
-        {children}
+        {slidesCount > 0 ? (
+          children
+        ) : (
+          <div className="h-40 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/60">
+            No slides available
+          </div>
+        )}
       </div>
     </CarouselContext.Provider>
   )
