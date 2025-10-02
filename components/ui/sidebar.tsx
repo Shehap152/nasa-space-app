@@ -187,7 +187,10 @@ function Sidebar({
           data-sidebar="sidebar"
           data-slot="sidebar"
           data-mobile="true"
-          className="bg-sidebar text-sidebar-foreground w-(--sidebar-width) p-0 [&>button]:hidden"
+          className={cn(
+            "text-sidebar-foreground w-(--sidebar-width) p-0 [&>button]:hidden",
+            className
+          )}
           style={
             {
               '--sidebar-width': SIDEBAR_WIDTH_MOBILE,
@@ -203,6 +206,11 @@ function Sidebar({
         </SheetContent>
       </Sheet>
     )
+  }
+
+  // Don't render desktop sidebar if collapsible is 'offcanvas' (mobile-only mode)
+  if (collapsible === 'offcanvas') {
+    return null
   }
 
   return (

@@ -1,6 +1,7 @@
 import Link from "next/link"
-import { ChevronLeft } from "lucide-react"
+import { ChevronLeft, Menu } from "lucide-react"
 import { AppLogo } from "./app-logo"
+import { SidebarTrigger } from "./ui/sidebar"
 
 interface AppHeaderProps {
   showBackButton?: boolean
@@ -24,12 +25,20 @@ export function AppHeader({ showBackButton = false, backHref = "/" }: AppHeaderP
         <AppLogo />
           </div>
 
-          <nav className="hidden md:flex items-center gap-2 text-sm">
-            <Link href="/publications" className="text-white/70 hover:text-white transition-colors px-3 py-2 rounded-lg hover:bg-white/10">Publications</Link>
-            <Link href="/favorites" className="text-white/70 hover:text-white transition-colors px-3 py-2 rounded-lg hover:bg-white/10">Favorites</Link>
-            <Link href="/knowledge-gaps" className="text-white/70 hover:text-white transition-colors px-3 py-2 rounded-lg hover:bg-white/10">Knowledge Gaps</Link>
-            <Link href="/data-integrations" className="text-white/70 hover:text-white transition-colors px-3 py-2 rounded-lg hover:bg-white/10">Data Integrations</Link>
-          </nav>
+          <div className="flex items-center gap-2">
+            {/* Mobile menu button */}
+            <div className="md:hidden">
+              <SidebarTrigger className="w-9 h-9 rounded-full bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors text-white" />
+            </div>
+            
+            {/* Desktop navigation */}
+            <nav className="hidden md:flex items-center gap-2 text-sm">
+              <Link href="/publications" className="text-white/70 hover:text-white transition-colors px-3 py-2 rounded-lg hover:bg-white/10">Publications</Link>
+              <Link href="/favorites" className="text-white/70 hover:text-white transition-colors px-3 py-2 rounded-lg hover:bg-white/10">Favorites</Link>
+              <Link href="/knowledge-gaps" className="text-white/70 hover:text-white transition-colors px-3 py-2 rounded-lg hover:bg-white/10">Knowledge Gaps</Link>
+              <Link href="/data-integrations" className="text-white/70 hover:text-white transition-colors px-3 py-2 rounded-lg hover:bg-white/10">Data Integrations</Link>
+            </nav>
+          </div>
         </div>
       </div>
     </header>
