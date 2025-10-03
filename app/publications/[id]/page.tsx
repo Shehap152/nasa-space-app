@@ -147,7 +147,7 @@ export default function PublicationDetailsPage({ params }: { params: { id: strin
         <div className="max-w-5xl mx-auto px-6 lg:px-8 mt-8">
           <h2 className="text-white font-bold text-xl lg:text-2xl mb-4">Abstract</h2>
           <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
-            <p className="text-white/80 leading-relaxed">{publication.abstract}</p>
+            <p className="text-white/80 leading-relaxed">{pub.abstract || "Abstract not available for this record."}</p>
           </div>
         </div>
 
@@ -157,26 +157,26 @@ export default function PublicationDetailsPage({ params }: { params: { id: strin
           <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 space-y-4">
             <div>
               <h3 className="text-white font-medium mb-2">Authors</h3>
-              <p className="text-white/70">{publication.authors?.join(", ") || "Unknown authors"}</p>
+              <p className="text-white/70">{pub.authors?.join(", ") || "Unknown authors"}</p>
             </div>
             <div>
               <h3 className="text-white font-medium mb-2">Journal</h3>
-              <p className="text-white/70">{publication.journal || "Unknown journal"}</p>
+              <p className="text-white/70">{pub.journal || "Unknown journal"}</p>
             </div>
             <div>
               <h3 className="text-white font-medium mb-2">DOI</h3>
-              <p className="text-white/70 font-mono text-sm">{publication.doi || "Not available"}</p>
+              <p className="text-white/70 font-mono text-sm">{pub.doi || "Not available"}</p>
             </div>
-            {publication.osdrId && (
+            {pub.osdrId && (
               <div>
                 <h3 className="text-white font-medium mb-2">OSDR ID</h3>
-                <p className="text-white/70 font-mono text-sm">{publication.osdrId}</p>
+                <p className="text-white/70 font-mono text-sm">{pub.osdrId}</p>
               </div>
             )}
-            {publication.taskBookId && (
+            {pub.taskBookId && (
               <div>
                 <h3 className="text-white font-medium mb-2">Task Book ID</h3>
-                <p className="text-white/70 font-mono text-sm">{publication.taskBookId}</p>
+                <p className="text-white/70 font-mono text-sm">{pub.taskBookId}</p>
               </div>
             )}
           </div>

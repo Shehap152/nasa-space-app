@@ -89,27 +89,86 @@ export function usePublications(): UsePublicationsResult {
         return
       }
 
-      let results: GeminiPublication[]
+      let results: GeminiPublication[] = []
       
       if (API_CONFIG.USE_MOCK_DATA) {
-        // Use mock data if no API key
-        results = mockPublications.filter(pub => {
-          const matchesQuery = !query || 
-            pub.title.toLowerCase().includes(query.toLowerCase()) ||
-            pub.category.toLowerCase().includes(query.toLowerCase())
-          const matchesCategory = !category || 
-            pub.category.toLowerCase().includes(category.toLowerCase())
+        // Prefer NASA local JSON when in mock mode
+        async function loadFromNasaJson(): Promise<GeminiPublication[]> {
+          try {
+            const res = await fetch("/nasa_data.json", { cache: "no-store" })
+            if (!res.ok) throw new Error(`HTTP ${res.status}`)
+            const data = await res.json()
+            if (!Array.isArray(data)) return []
+
+            const publications = (data as Array<any>).map((item, index) => {
+              const categoryText = String(item.category || "")
+              const [primaryCategory, subcategoryRaw] = categoryText.split(" - ")
+              const category = (primaryCategory || "Space biology").trim()
+              const subcategory = (subcategoryRaw || "general").trim()
+              const year = typeof item.year === "number" ? item.year : 0
+              const title = String(item.title || "Untitled Publication")
+              const link = String(item.link || "")
+              const id = `${year}-${index}-${Math.abs(hashString(title + link))}`
+
+              const pub: GeminiPublication = {
+                id,
+                title,
+                category,
+                subcategory,
+                year,
+                abstract: "",
+                authors: ["Unknown Author"],
+                journal: "",
+                doi: "",
+                relatedStudies: [],
+              }
+              return pub
+            })
+            return publications
+          } catch {
+            return []
+          }
+        }
+
+        function hashString(input: string): number {
+          let hash = 0
+          for (let i = 0; i < input.length; i++) {
+            const chr = input.charCodeAt(i)
+            hash = (hash << 5) - hash + chr
+            hash |= 0
+          }
+          return hash
+        }
+
+        let nasaResults = await loadFromNasaJson()
+        if (!nasaResults.length) {
+          // Fallback to bundled mock publications
+          nasaResults = mockPublications.map(pub => ({
+            ...pub,
+            abstract: pub.abstract || "No abstract available.",
+            authors: pub.authors || ["Unknown Author"],
+            journal: pub.journal || "Unknown Journal",
+            doi: pub.doi || "10.0000/unknown",
+            relatedStudies: pub.relatedStudies || []
+          })) as GeminiPublication[]
+        }
+
+        const q = query.toLowerCase()
+        const cat = (category || "").toLowerCase()
+        const filtered = nasaResults.filter(p => {
+          const t = (p.title || "").toLowerCase()
+          const c = (p.category || "").toLowerCase()
+          const s = (p.subcategory || "").toLowerCase()
+          const matchesQuery = !q || t.includes(q) || c.includes(q) || s.includes(q)
+          const matchesCategory = !cat || c.includes(cat)
           return matchesQuery && matchesCategory
-        }).map(pub => ({
-          ...pub,
-          abstract: pub.abstract || "No abstract available.",
-          authors: pub.authors || ["Unknown Author"],
-          journal: pub.journal || "Unknown Journal",
-          doi: pub.doi || "10.0000/unknown",
-          relatedStudies: pub.relatedStudies || []
-        })) as GeminiPublication[]
+        })
+
+        const limit = Number(API_CONFIG.DEFAULT_PUBLICATION_LIMIT) || 20
+        results = filtered.slice(0, limit)
       } else {
-        results = await geminiAPI.searchPublications(query, category)
+        const apiResults = await geminiAPI.searchPublications(query, category, Number(API_CONFIG.DEFAULT_PUBLICATION_LIMIT) || 20)
+        results = Array.isArray(apiResults) ? apiResults : []
       }
       
       cache.set(cacheKey, results, API_CONFIG.CACHE_DURATION.PUBLICATIONS)
@@ -164,15 +223,57 @@ export function usePublicationDetails(): UsePublicationDetailsResult {
       let result: GeminiPublication | null
       
       if (API_CONFIG.USE_MOCK_DATA) {
-        const mockPub = mockPublications.find(p => p.id === id)
-        result = mockPub ? {
-          ...mockPub,
-          abstract: mockPub.abstract || "No abstract available.",
-          authors: mockPub.authors || ["Unknown Author"],
-          journal: mockPub.journal || "Unknown Journal", 
-          doi: mockPub.doi || "10.0000/unknown",
-          relatedStudies: mockPub.relatedStudies || []
-        } as GeminiPublication : null
+        // Try to reconstruct publication from nasa_data.json first
+        try {
+          const res = await fetch('/nasa_data.json', { cache: 'no-store' })
+          if (res.ok) {
+            const items = await res.json()
+            if (Array.isArray(items)) {
+              const all: GeminiPublication[] = items.map((item: any, index: number) => {
+                const categoryText = String(item.category || "")
+                const [primaryCategory, subcategoryRaw] = categoryText.split(" - ")
+                const category = (primaryCategory || "Space biology").trim()
+                const subcategory = (subcategoryRaw || "general").trim()
+                const year = typeof item.year === 'number' ? item.year : 0
+                const titleText = String(item.title || "Untitled Publication")
+                const link = String(item.link || "")
+                const computedId = `${year}-${index}-${Math.abs(hashString(titleText + link))}`
+                return {
+                  id: computedId,
+                  title: titleText,
+                  category,
+                  subcategory,
+                  year,
+                  abstract: "",
+                  authors: ["Unknown Author"],
+                  journal: "",
+                  doi: "",
+                  relatedStudies: [],
+                } as GeminiPublication
+              })
+              result = all.find(p => p.id === id) || null
+            } else {
+              result = null
+            }
+          } else {
+            result = null
+          }
+        } catch {
+          result = null
+        }
+
+        // Fallback to bundled mock data if not found
+        if (!result) {
+          const mockPub = mockPublications.find(p => p.id === id)
+          result = mockPub ? {
+            ...mockPub,
+            abstract: mockPub.abstract || "No abstract available.",
+            authors: mockPub.authors || ["Unknown Author"],
+            journal: mockPub.journal || "Unknown Journal", 
+            doi: mockPub.doi || "10.0000/unknown",
+            relatedStudies: mockPub.relatedStudies || []
+          } as GeminiPublication : null
+        }
       } else {
         result = await geminiAPI.getPublicationDetails(id, title || "")
       }
@@ -190,6 +291,16 @@ export function usePublicationDetails(): UsePublicationDetailsResult {
       setLoading(false)
     }
   }, [])
+
+  function hashString(input: string): number {
+    let hash = 0
+    for (let i = 0; i < input.length; i++) {
+      const chr = input.charCodeAt(i)
+      hash = (hash << 5) - hash + chr
+      hash |= 0
+    }
+    return hash
+  }
 
   return {
     publication,

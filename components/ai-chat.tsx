@@ -44,6 +44,11 @@ export function AIChat({ className = "", initiallyOpen = false }: AIChatProps) {
   }, [messages])
 
   const generateChatResponse = async (userMessage: string, fullConversationHistory: Message[]): Promise<string> => {
+    // In mock mode, use local generator immediately
+    if (API_CONFIG.USE_MOCK_DATA) {
+      return Promise.resolve(getMockResponse(userMessage, fullConversationHistory))
+    }
+
     try {
       // Convert Message[] to the format expected by the API
       const conversationForAPI = fullConversationHistory
@@ -54,7 +59,8 @@ export function AIChat({ className = "", initiallyOpen = false }: AIChatProps) {
       return response
     } catch (error) {
       console.error("Error generating chat response:", error)
-      throw new Error("Failed to generate response. Please try again.")
+      // Fallback to local mock response if API fails
+      return getMockResponse(userMessage, fullConversationHistory)
     }
   }
 

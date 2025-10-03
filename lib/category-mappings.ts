@@ -173,8 +173,8 @@ export const categoryMappings: Record<string, CategoryMapping> = {
 }
 
 // Helper function to get category mapping with fallback
-export function getCategoryMapping(category: string): CategoryMapping {
-  const normalizedCategory = category.toLowerCase()
+export function getCategoryMapping(category?: string): CategoryMapping {
+  const normalizedCategory = (category || "").toLowerCase()
   return (
     categoryMappings[normalizedCategory] || {
       icon: Microscope,

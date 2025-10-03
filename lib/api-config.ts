@@ -1,15 +1,17 @@
 // API Configuration
 export const API_CONFIG = {
   GEMINI_API_KEY: process.env.NEXT_PUBLIC_GEMINI_API_KEY || "",
+  NASA_APOD_API_KEY: process.env.NEXT_PUBLIC_NASA_APOD_API_KEY || "M7slMeItjmXMZsjjVdeE9hOdKDE17McxelM3iHcZ",
   
   // Fallback to mock data if API key is not provided
   USE_MOCK_DATA: !process.env.NEXT_PUBLIC_GEMINI_API_KEY,
   
   // API endpoints and settings
   GEMINI_MODEL: process.env.NEXT_PUBLIC_GEMINI_MODEL || "gemini-1.5-flash-latest",
+  NASA_APOD_BASE_URL: "https://api.nasa.gov/planetary/apod",
   
   // Default limits
-  DEFAULT_PUBLICATION_LIMIT: 20,
+  DEFAULT_PUBLICATION_LIMIT: 100,
   MAX_CHAT_HISTORY: 10,
   
   // Cache settings (in milliseconds)
