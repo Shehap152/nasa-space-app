@@ -163,15 +163,6 @@ export function NASAAPOD({
                 <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
               </Button>
             )}
-            <Button
-              onClick={handleRefresh}
-              variant="outline"
-              size="sm"
-              disabled={isRefreshing}
-              className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-            >
-              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            </Button>
           </div>
         </div>
       </CardHeader>

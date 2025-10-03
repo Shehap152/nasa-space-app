@@ -154,7 +154,7 @@ export function AIChat({ className = "", initiallyOpen = false }: AIChatProps) {
 
   if (isMinimized) {
     return (
-      <div className={`fixed bottom-6 right-6 z-50 ${className}`}>
+      <div className={`fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 ${className}`}>
         <Button
           onClick={() => setIsMinimized(false)}
           className="w-14 h-14 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white shadow-lg hover:shadow-xl transition-all"
@@ -166,8 +166,8 @@ export function AIChat({ className = "", initiallyOpen = false }: AIChatProps) {
   }
 
   return (
-    <div className={`fixed bottom-6 right-6 z-50 ${className}`}>
-      <div className="w-96 h-[600px] bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-2xl flex flex-col">
+    <div className={`fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 ${className}`}>
+      <div className="w-[calc(100vw-1.5rem)] h-[70vh] sm:w-96 sm:h-[600px] bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-2xl flex flex-col">
         {/* Header */}
         <div className="p-4 border-b border-white/20 flex items-center justify-between">
           <div className="flex items-center gap-2">

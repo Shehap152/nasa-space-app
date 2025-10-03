@@ -123,7 +123,7 @@ export function DashboardAnalytics() {
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-5">
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-5 min-w-0">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-white font-semibold">Publications per Year</h3>
           </div>
@@ -141,7 +141,7 @@ export function DashboardAnalytics() {
           </ChartContainer>
         </div>
 
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-5">
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-5 min-w-0">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-white font-semibold">Publications by Category</h3>
           </div>
