@@ -238,13 +238,17 @@ export function usePublicationDetails(): UsePublicationDetailsResult {
                 const titleText = String(item.title || "Untitled Publication")
                 const link = String(item.link || "")
                 const computedId = `${year}-${index}-${Math.abs(hashString(titleText + link))}`
+                // Always provide a default abstract if missing
+                const abstract = item.abstract && String(item.abstract).trim().length > 0
+                  ? String(item.abstract)
+                  : `This publication is about ${titleText} in the field of ${category}.`;
                 return {
                   id: computedId,
                   title: titleText,
                   category,
                   subcategory,
                   year,
-                  abstract: "",
+                  abstract,
                   authors: ["Unknown Author"],
                   journal: "",
                   doi: "",
@@ -339,17 +343,27 @@ export function useChat(publicationTitle: string, publicationAbstract: string): 
 
     try {
       let response: string
-      
-      // Always call Gemini API using the latest conversation history
-      const conversationHistory = [...messages, userMessage]
-        .slice(-API_CONFIG.MAX_CHAT_HISTORY)
-        .map(m => ({ type: m.type, content: m.content }))
-      response = await geminiAPI.generateChatResponse(
-        publicationTitle,
-        publicationAbstract,
-        message,
-        conversationHistory
-      )
+
+      // Call server-side API route for publication chat
+      const apiResponse = await fetch('/api/chat/publication', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: message.trim(),
+          history: [...messages, userMessage].map(m => ({ type: m.type, content: m.content })),
+          publicationTitle: publicationTitle,
+          publicationAbstract: publicationAbstract,
+        }),
+      })
+
+      if (!apiResponse.ok) {
+        throw new Error(`API error: ${apiResponse.status}`)
+      }
+
+      const data = await apiResponse.json()
+      response = data.response || ''
 
       const aiMessage = {
         id: (Date.now() + 1).toString(),

@@ -43,64 +43,57 @@ export function AIChat({ className = "", initiallyOpen = false }: AIChatProps) {
     scrollToBottom()
   }, [messages])
 
-  const generateChatResponse = async (userMessage: string, fullConversationHistory: Message[]): Promise<string> => {
-    // In mock mode, use local generator immediately
-    if (API_CONFIG.USE_MOCK_DATA) {
-      return Promise.resolve(getMockResponse(userMessage, fullConversationHistory))
-    }
-
+const generateChatResponse = async (userMessage: string): Promise<string> => {
     try {
-      // Convert Message[] to the format expected by the API
-      const conversationForAPI = fullConversationHistory
-        .slice(-API_CONFIG.MAX_CHAT_HISTORY)
-        .map(msg => ({ type: msg.type, content: msg.content }))
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message: userMessage }),
+      });
 
-      const response = await geminiAPI.generateGeneralChatResponse(userMessage, conversationForAPI)
-      return response
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || `API error: ${response.status}`);
+      }
+      return data.reply || '';
     } catch (error) {
-      console.error("Error generating chat response:", error)
-      // Fallback to local mock response if API fails
-      return getMockResponse(userMessage, fullConversationHistory)
+      console.error("Error generating chat response:", error);
+      throw error;
     }
   }
 
   const sendMessage = async (message: string) => {
-    if (!message.trim() || loading) return
+    if (!message.trim() || loading) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
       type: "user",
       content: message.trim(),
       timestamp: new Date(),
-    }
+    };
 
-    // Update messages with user message first
-    const updatedMessages = [...messages, userMessage]
-    setMessages(updatedMessages)
-    setInputValue("")
-    setLoading(true)
-    setError(null)
+    setMessages(prev => [...prev, userMessage]);
+    setInputValue("");
+    setLoading(true);
+    setError(null);
 
     try {
-      // Pass the complete conversation history including the new user message
-      const response = await generateChatResponse(userMessage.content, updatedMessages)
-      
+      const aiReply = await generateChatResponse(userMessage.content);
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: "ai",
-        content: response,
+        content: aiReply,
         timestamp: new Date(),
-      }
-
-        // Add AI response to the conversation
-      setMessages(prev => [...prev, aiMessage])
+      };
+      setMessages(prev => [...prev, aiMessage]);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to generate response")
-      console.error("Error in sendMessage:", err)
+      setError(err instanceof Error ? err.message : "Failed to connect to Gemini API");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleSendMessage = () => {
     sendMessage(inputValue)
@@ -244,18 +237,9 @@ export function AIChat({ className = "", initiallyOpen = false }: AIChatProps) {
                 </div>
                 <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-3">
                   <div className="flex gap-1">
-                    <div
-                      className="w-2 h-2 bg-white/60 rounded-full animate-bounce"
-                      style={{ animationDelay: "0ms" }}
-                    />
-                    <div
-                      className="w-2 h-2 bg-white/60 rounded-full animate-bounce"
-                      style={{ animationDelay: "150ms" }}
-                    />
-                    <div
-                      className="w-2 h-2 bg-white/60 rounded-full animate-bounce"
-                      style={{ animationDelay: "300ms" }}
-                    />
+                    <div className="chat-animated-dot delay-0" />
+                    <div className="chat-animated-dot delay-150" />
+                    <div className="chat-animated-dot delay-300" />
                   </div>
                 </div>
               </div>

@@ -26,12 +26,13 @@ export default function ChatPage({ params }: { params: { id: string } }) {
     error: publicationError,
     fetchPublication,
   } = usePublicationDetails();
-  const {
-    messages,
-    loading: chatLoading,
-    error: chatError,
-    sendMessage,
-  } = useChat(publication?.title || "", publication?.abstract || "");
+
+  // Only initialize chat when publication is loaded and valid
+  const chatReady = !!(publication && publication.title && publication.abstract);
+  const chat = useChat(
+    chatReady ? publication.title : "",
+    chatReady ? publication.abstract : ""
+  );
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -42,17 +43,17 @@ export default function ChatPage({ params }: { params: { id: string } }) {
   }, [params.id, fetchPublication]);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    if (chatReady) scrollToBottom();
+  }, [chatReady, chat.messages]);
 
   const handleSendMessage = async (content: string) => {
-    if (!content.trim()) return;
-    await sendMessage(content);
+    if (!content.trim() || !chatReady) return;
+    await chat.sendMessage(content);
     setInputValue("");
   };
 
   const handleSuggestionClick = (suggestion: string) => {
-    handleSendMessage(suggestion);
+    if (chatReady) handleSendMessage(suggestion);
   };
 
   const formatTime = (date: Date) => {
@@ -62,9 +63,7 @@ export default function ChatPage({ params }: { params: { id: string } }) {
     });
   };
 
-  const isInitializing = publicationLoading || (!publication && !publicationError)
-
-  if (isInitializing) {
+  if (publicationLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#0a1628] via-[#1a1a3e] to-[#2d1b4e] relative overflow-hidden flex flex-col">
         <SpaceBackground />
@@ -103,6 +102,9 @@ export default function ChatPage({ params }: { params: { id: string } }) {
     );
   }
 
+  // Only render chat UI if publication is loaded and valid
+  if (!chatReady) return null;
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0a1628] via-[#1a1a3e] to-[#2d1b4e] relative overflow-hidden flex flex-col">
       <SpaceBackground />
@@ -112,7 +114,7 @@ export default function ChatPage({ params }: { params: { id: string } }) {
 
         {/* Chat Messages Area */}
         <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
-          {messages.map((message) => (
+          {chat.messages.map((message) => (
             <div
               key={message.id}
               className={`flex ${
@@ -157,7 +159,7 @@ export default function ChatPage({ params }: { params: { id: string } }) {
             </div>
           ))}
 
-          {chatLoading && (
+          {chat.loading && (
             <div className="flex justify-start">
               <div className="max-w-[80%]">
                 <div className="flex items-center gap-2 mb-2">
@@ -170,18 +172,9 @@ export default function ChatPage({ params }: { params: { id: string } }) {
                 </div>
                 <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-4">
                   <div className="flex gap-1">
-                    <div
-                      className="w-2 h-2 bg-white/60 rounded-full animate-bounce"
-                      style={{ animationDelay: "0ms" }}
-                    />
-                    <div
-                      className="w-2 h-2 bg-white/60 rounded-full animate-bounce"
-                      style={{ animationDelay: "150ms" }}
-                    />
-                    <div
-                      className="w-2 h-2 bg-white/60 rounded-full animate-bounce"
-                      style={{ animationDelay: "300ms" }}
-                    />
+                    <div className="chat-animated-dot delay-0" />
+                    <div className="chat-animated-dot delay-150" />
+                    <div className="chat-animated-dot delay-300" />
                   </div>
                 </div>
               </div>
@@ -192,7 +185,7 @@ export default function ChatPage({ params }: { params: { id: string } }) {
         </div>
 
         {/* Quick Suggestions */}
-        {messages.length <= 2 && (
+        {chat.messages.length <= 2 && (
           <div className="px-6 pb-3">
             <div className="flex gap-2 overflow-x-auto scrollbar-hide">
               {quickSuggestions.map((suggestion) => (
@@ -210,12 +203,12 @@ export default function ChatPage({ params }: { params: { id: string } }) {
         )}
 
         {/* Error Display */}
-        {chatError && (
+        {chat.error && (
           <div className="px-6 pb-3">
             <div className="bg-red-500/20 border border-red-500/30 rounded-2xl p-3">
               <div className="flex items-center gap-2 text-red-400">
                 <AlertCircle className="w-4 h-4" />
-                <span className="text-sm">{chatError}</span>
+                <span className="text-sm">{chat.error}</span>
               </div>
             </div>
           </div>
@@ -231,11 +224,7 @@ export default function ChatPage({ params }: { params: { id: string } }) {
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
-                  if (
-                    publication &&
-                    publication.title &&
-                    publication.abstract
-                  ) {
+                  if (chatReady) {
                     handleSendMessage(inputValue);
                   }
                 }
@@ -244,24 +233,20 @@ export default function ChatPage({ params }: { params: { id: string } }) {
               className="flex-1 bg-transparent border-none text-white placeholder:text-white/50 focus-visible:ring-0 focus-visible:ring-offset-0"
               disabled={
                 publicationLoading ||
-                !publication ||
-                !publication.title ||
-                !publication.abstract
+                !chatReady
               }
             />
             <Button
               onClick={() => {
-                if (publication && publication.title && publication.abstract) {
+                if (chatReady) {
                   handleSendMessage(inputValue);
                 }
               }}
               disabled={
                 !inputValue.trim() ||
-                chatLoading ||
+                chat.loading ||
                 publicationLoading ||
-                !publication ||
-                !publication.title ||
-                !publication.abstract
+                !chatReady
               }
               className="bg-blue-500 hover:bg-blue-600 text-white rounded-xl h-10 w-10 p-0 flex items-center justify-center disabled:opacity-50"
             >
