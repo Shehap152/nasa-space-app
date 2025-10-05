@@ -5,6 +5,7 @@ import { NASANEO } from "@/components/nasa-neo"
 import { SpaceXLaunches } from "@/components/spacex-launches"
 import { SpaceQuote } from "@/components/space-quote"
 import { DashboardAnalytics } from "@/components/dashboard-analytics"
+import { QuickActions } from "@/components/quick-actions"
 
 export default function DashboardPage() {
   return (
@@ -24,20 +25,14 @@ export default function DashboardPage() {
             </p>
           </div>
           
+          {/* Quick Actions */}
+          <div className="mb-8">
+            <QuickActions />
+          </div>
+
           {/* Main Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-            {/* APOD - Full width on large screens */}
-            <div className="lg:col-span-2">
-              <NASAAPOD showRandomButton={true} />
-            </div>
-            
-            {/* NEO and SpaceX Launches */}
-            <div className="space-y-8">
-              <NASANEO showUpcoming={true} daysAhead={7} />
-              <SpaceXLaunches showUpcoming={true} limit={3} />
-            </div>
-            
-            {/* Space Quote */}
+          <div className="grid grid-cols-1 gap-8 mb-8">
+            {/* Space Quote on top */}
             <div>
               <SpaceQuote 
                 showRefreshButton={true} 
@@ -45,10 +40,25 @@ export default function DashboardPage() {
                 refreshInterval={600000} // 10 minutes
               />
             </div>
+
+            {/* APOD - Full width on large screens */}
+            <div>
+              <NASAAPOD showRandomButton={true} />
+            </div>
+
+            {/* Two-column: NEO left, SpaceX right */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div>
+                <NASANEO showUpcoming={true} daysAhead={7} />
+              </div>
+              <div>
+                <SpaceXLaunches showUpcoming={true} limit={6} compact={true} maxHeight={420} />
+              </div>
+            </div>
           </div>
 
           {/* Analytics */}
-          <div className="mt-2">
+          <div className="mt-8">
             <DashboardAnalytics />
           </div>
 

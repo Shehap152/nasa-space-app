@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { ScrollArea } from '@/components/ui/scroll-area'
 
 interface NASANEOProps {
   className?: string
@@ -136,7 +137,7 @@ export function NASANEO({
 
   return (
     <Card className={`bg-white/5 backdrop-blur-xl border-white/10 ${className}`}>
-      <CardHeader className="pb-4">
+      <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="text-white text-xl font-bold mb-1">
@@ -159,7 +160,8 @@ export function NASANEO({
       </CardHeader>
 
       <CardContent className="space-y-4">
-        <div className="grid gap-3 max-h-96 overflow-y-auto">
+        <ScrollArea className="h-[420px] rounded-xl">
+          <div className="grid gap-3 pr-2">
           {neoData.slice(0, 10).map((neo) => {
             const hazardLevel = nasaNEOService.getHazardLevel(neo)
             const nextApproach = neo.close_approach_data[0]
@@ -220,7 +222,8 @@ export function NASANEO({
               </div>
             )
           })}
-        </div>
+          </div>
+        </ScrollArea>
 
         {neoData.length > 10 && (
           <div className="text-center pt-2">

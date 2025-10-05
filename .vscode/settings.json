@@ -1,0 +1,9 @@
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "prettier.singleQuote": true,
+  "prettier.semi": false,
+  "prettier.trailingComma": "all",
+  "tailwindCSS.experimental.classRegex": [["tw`([^`]*)", "tw\\.\"([^\"]*)\"", "tw\\.\'([^\']*)\'"]]
+}
+

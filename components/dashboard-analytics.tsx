@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { usePublications } from '@/hooks/use-gemini-api'
 import type { GeminiPublication } from '@/lib/gemini-api'
 import { useFavorites } from '@/hooks/use-favorites'
@@ -21,6 +21,8 @@ import {
   Bar,
   ResponsiveContainer,
 } from 'recharts'
+import { Button } from '@/components/ui/button'
+import { EmptyState } from '@/components/empty-state'
 
 type YearPoint = { year: number; count: number }
 type CategoryPoint = { category: string; count: number }
@@ -28,6 +30,8 @@ type CategoryPoint = { category: string; count: number }
 export function DashboardAnalytics() {
   const { publications = [], loading, error } = usePublications()
   const { favoriteIds } = useFavorites()
+  const [showAllCategories, setShowAllCategories] = useState(false)
+  const [lastTenYearsOnly, setLastTenYearsOnly] = useState(true)
 
   const {
     totalPublications,
@@ -45,13 +49,15 @@ export function DashboardAnalytics() {
     categorySeries: CategoryPoint[];
   }>(() => {
     const pubs: GeminiPublication[] = Array.isArray(publications) ? (publications as GeminiPublication[]) : []
-    const totalPublications = pubs.length
-    const favoritesCount = pubs.filter((p) => p && (p as any).id && favoriteIds.has((p as any).id)).length
-    const viewedCount = pubs.filter((p) => p && (p as any).isViewed).length
-    const latestYear = pubs.reduce((y, p) => Math.max(y, ((p as any)?.year) || 0), 0)
+    const nowYear = new Date().getFullYear()
+    const filteredPubs = lastTenYearsOnly ? pubs.filter(p => (p as any)?.year && (p as any).year >= nowYear - 9) : pubs
+    const totalPublications = filteredPubs.length
+    const favoritesCount = filteredPubs.filter((p) => p && (p as any).id && favoriteIds.has((p as any).id)).length
+    const viewedCount = filteredPubs.filter((p) => p && (p as any).isViewed).length
+    const latestYear = filteredPubs.reduce((y, p) => Math.max(y, ((p as any)?.year) || 0), 0)
 
 	const yearCounts: Record<string, number> = {}
-	;(pubs || []).forEach((p: unknown) => {
+	;(filteredPubs || []).forEach((p: unknown) => {
 	  const yr = (p as any)?.year
 	  if (typeof yr === 'number') {
 	    const key = String(yr)
@@ -63,7 +69,7 @@ export function DashboardAnalytics() {
 	  .sort((a, b) => a.year - b.year)
 
 	const categoryCounts: Record<string, number> = {}
-	;(pubs || []).forEach((p: unknown) => {
+	;(filteredPubs || []).forEach((p: unknown) => {
 	  const cat = (p as any)?.category ? String((p as any).category) : ''
 	  if (cat) {
 	    categoryCounts[cat] = (categoryCounts[cat] || 0) + 1
@@ -81,10 +87,10 @@ export function DashboardAnalytics() {
       yearSeries,
       categorySeries,
     }
-  }, [publications, favoriteIds])
+  }, [publications, favoriteIds, lastTenYearsOnly])
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Loading / Error */}
       {(loading || error) && (
         <div className="grid grid-cols-1 gap-4">
@@ -99,6 +105,15 @@ export function DashboardAnalytics() {
             </div>
           )}
         </div>
+      )}
+
+      {/* Empty state */}
+      {!loading && !error && totalPublications === 0 && (
+        <EmptyState
+          title="No analytics to display"
+          message="Try adding or searching for publications to populate analytics."
+          icon="search"
+        />
       )}
 
       {/* KPI Cards */}
@@ -122,10 +137,16 @@ export function DashboardAnalytics() {
       </div>
 
       {/* Charts */}
+      {totalPublications > 0 && (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-5 min-w-0">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-white font-semibold">Publications per Year</h3>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" className="h-8 px-3 bg-white/10 text-white hover:bg-white/20 border-white/20" onClick={() => setLastTenYearsOnly((s) => !s)}>
+                {lastTenYearsOnly ? 'Show all years' : 'Show last 10 years'}
+              </Button>
+            </div>
           </div>
           <ChartContainer
             config={{ count: { label: 'Publications', color: 'hsl(262 83% 62%)' } }}
@@ -136,7 +157,13 @@ export function DashboardAnalytics() {
               <XAxis dataKey="year" stroke="rgba(255,255,255,0.5)" tickLine={false} />
               <YAxis stroke="rgba(255,255,255,0.5)" tickLine={false} allowDecimals={false} />
               <ChartTooltip content={<ChartTooltipContent />} />
-              <Line type="monotone" dataKey="count" stroke="var(--color-count)" strokeWidth={2} dot={false} />
+              <defs>
+                <linearGradient id="yearGradient" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stopColor="hsl(262 83% 62%)" stopOpacity={0.35} />
+                  <stop offset="100%" stopColor="hsl(262 83% 62%)" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <Line type="monotone" dataKey="count" stroke="var(--color-count)" strokeWidth={2} dot={false} fill="url(#yearGradient)" />
             </LineChart>
           </ChartContainer>
         </div>
@@ -144,26 +171,32 @@ export function DashboardAnalytics() {
         <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-5 min-w-0">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-white font-semibold">Publications by Category</h3>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" className="h-8 px-3 bg-white/10 text-white hover:bg-white/20 border-white/20" onClick={() => setShowAllCategories((s) => !s)}>
+                {showAllCategories ? 'Show top 10' : 'Show all'}
+              </Button>
+            </div>
           </div>
           <ChartContainer
             config={{ count: { label: 'Publications', color: 'hsl(20 90% 60%)' } }}
             className="h-64"
           >
-            <BarChart data={categorySeries as unknown as any[]} margin={{ left: 8, right: 8, top: 8 }}>
+            <BarChart data={(showAllCategories ? categorySeries : (categorySeries as CategoryPoint[]).slice(0, 10)) as unknown as any[]} margin={{ left: 8, right: 8, top: 8 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-              <XAxis dataKey="category" stroke="rgba(255,255,255,0.5)" tickLine={false} hide={true} />
+              <XAxis dataKey="category" stroke="rgba(255,255,255,0.5)" tickLine={false} hide={!showAllCategories} angle={-30} height={60} textAnchor="end" />
               <YAxis stroke="rgba(255,255,255,0.5)" tickLine={false} allowDecimals={false} />
               <ChartTooltip content={<ChartTooltipContent />} />
               <Bar dataKey="count" fill="var(--color-count)" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ChartContainer>
           <div className="mt-2 grid grid-cols-2 gap-1 text-xs text-white/70">
-            {(categorySeries as CategoryPoint[]).slice(0, 6).map((item: CategoryPoint) => (
+            {(categorySeries as CategoryPoint[]).slice(0, showAllCategories ? 12 : 6).map((item: CategoryPoint) => (
               <div key={item.category} className="truncate">{item.category}: {item.count}</div>
             ))}
           </div>
         </div>
       </div>
+      )}
     </div>
   )
 }

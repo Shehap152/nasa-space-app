@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { Quote, RefreshCw, Loader2, AlertCircle, Sparkles } from 'lucide-react'
-import { spaceQuotesService, SpaceQuote, QuoteError } from '@/lib/space-quotes-api'
+import { spaceQuotesService } from '@/lib/space-quotes-api'
+import type { SpaceQuote as SpaceQuoteType, QuoteError } from '@/lib/space-quotes-api'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -20,7 +21,7 @@ export function SpaceQuote({
   autoRefresh = false,
   refreshInterval = 300000 // 5 minutes
 }: SpaceQuoteProps) {
-  const [quote, setQuote] = useState<SpaceQuote | null>(null)
+  const [quote, setQuote] = useState<SpaceQuoteType | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)

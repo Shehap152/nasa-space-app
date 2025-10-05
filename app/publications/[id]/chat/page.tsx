@@ -1,53 +1,70 @@
-"use client"
+"use client";
 
-import { useState, useRef, useEffect } from "react"
-import { Send, Sparkles, Loader2, AlertCircle } from "lucide-react"
-import { AppHeader } from "@/components/app-header"
-import { SpaceBackground } from "@/components/space-background"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { usePublicationDetails, useChat } from "@/hooks/use-gemini-api"
+import { useState, useRef, useEffect } from "react";
+import { Send, Sparkles, Loader2, AlertCircle } from "lucide-react";
+import { AppHeader } from "@/components/app-header";
+import { SpaceBackground } from "@/components/space-background";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { usePublicationDetails, useChat } from "@/hooks/use-gemini-api";
 
-const quickSuggestions = ["Main findings", "Research methods", "Knowledge gaps", "Future applications"]
+const quickSuggestions = [
+  "Main findings",
+  "Research methods",
+  "Knowledge gaps",
+  "Future applications",
+];
 
 export default function ChatPage({ params }: { params: { id: string } }) {
-  const [inputValue, setInputValue] = useState("")
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
-  
-  const { publication, loading: publicationLoading, error: publicationError, fetchPublication } = usePublicationDetails()
-  const { messages, loading: chatLoading, error: chatError, sendMessage } = useChat(
-    publication?.title || "",
-    publication?.abstract || ""
-  )
+  const [inputValue, setInputValue] = useState("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const {
+    publication,
+    loading: publicationLoading,
+    error: publicationError,
+    fetchPublication,
+  } = usePublicationDetails();
+  const {
+    messages,
+    loading: chatLoading,
+    error: chatError,
+    sendMessage,
+  } = useChat(publication?.title || "", publication?.abstract || "");
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   useEffect(() => {
-    fetchPublication(params.id)
-  }, [params.id, fetchPublication])
+    fetchPublication(params.id);
+  }, [params.id, fetchPublication]);
 
   useEffect(() => {
-    scrollToBottom()
-  }, [messages])
+    scrollToBottom();
+  }, [messages]);
 
   const handleSendMessage = async (content: string) => {
-    if (!content.trim()) return
-    await sendMessage(content)
-    setInputValue("")
-  }
+    if (!content.trim()) return;
+    await sendMessage(content);
+    setInputValue("");
+  };
 
   const handleSuggestionClick = (suggestion: string) => {
-    handleSendMessage(suggestion)
-  }
+    handleSendMessage(suggestion);
+  };
 
   const formatTime = (date: Date) => {
-    return date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
-  }
+    return date.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
-  if (publicationLoading) {
+  const isInitializing = publicationLoading || (!publication && !publicationError)
+
+  if (isInitializing) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#0a1628] via-[#1a1a3e] to-[#2d1b4e] relative overflow-hidden flex flex-col">
         <SpaceBackground />
@@ -61,7 +78,7 @@ export default function ChatPage({ params }: { params: { id: string } }) {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   if (publicationError || !publication) {
@@ -76,12 +93,14 @@ export default function ChatPage({ params }: { params: { id: string } }) {
                 <AlertCircle className="w-5 h-5" />
                 <span className="font-medium">Error loading publication</span>
               </div>
-              <p className="text-red-300">{publicationError || "Publication not found"}</p>
+              <p className="text-red-300">
+                {publicationError || "Publication not found"}
+              </p>
             </div>
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -94,11 +113,24 @@ export default function ChatPage({ params }: { params: { id: string } }) {
         {/* Chat Messages Area */}
         <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
           {messages.map((message) => (
-            <div key={message.id} className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}>
-              <div className={`max-w-[80%] ${message.type === "user" ? "order-2" : "order-1"}`}>
+            <div
+              key={message.id}
+              className={`flex ${
+                message.type === "user" ? "justify-end" : "justify-start"
+              }`}
+            >
+              <div
+                className={`max-w-[80%] ${
+                  message.type === "user" ? "order-2" : "order-1"
+                }`}
+              >
                 {message.type === "ai" && (
                   <div className="flex items-center gap-2 mb-2">
-                    <img src="/logo.png" alt="Space Hunters" className="w-6 h-6 rounded-full border border-white/20" />
+                    <img
+                      src="/logo.png"
+                      alt="Space Hunters"
+                      className="w-6 h-6 rounded-full border border-white/20"
+                    />
                     <span className="text-white/60 text-xs">Space Hunters</span>
                   </div>
                 )}
@@ -112,7 +144,11 @@ export default function ChatPage({ params }: { params: { id: string } }) {
                 >
                   <p className="text-sm leading-relaxed">{message.content}</p>
                   <p
-                    className={`text-xs mt-2 ${message.type === "user" ? "text-white/70" : "text-white/50"} text-right`}
+                    className={`text-xs mt-2 ${
+                      message.type === "user"
+                        ? "text-white/70"
+                        : "text-white/50"
+                    } text-right`}
                   >
                     {formatTime(message.timestamp)}
                   </p>
@@ -125,7 +161,11 @@ export default function ChatPage({ params }: { params: { id: string } }) {
             <div className="flex justify-start">
               <div className="max-w-[80%]">
                 <div className="flex items-center gap-2 mb-2">
-                  <img src="/logo.png" alt="Space Hunters" className="w-6 h-6 rounded-full border border-white/20" />
+                  <img
+                    src="/logo.png"
+                    alt="Space Hunters"
+                    className="w-6 h-6 rounded-full border border-white/20"
+                  />
                   <span className="text-white/60 text-xs">Space Hunters</span>
                 </div>
                 <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-4">
@@ -190,16 +230,39 @@ export default function ChatPage({ params }: { params: { id: string } }) {
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault()
-                  handleSendMessage(inputValue)
+                  e.preventDefault();
+                  if (
+                    publication &&
+                    publication.title &&
+                    publication.abstract
+                  ) {
+                    handleSendMessage(inputValue);
+                  }
                 }
               }}
               placeholder="Ask a question about this publication…"
               className="flex-1 bg-transparent border-none text-white placeholder:text-white/50 focus-visible:ring-0 focus-visible:ring-offset-0"
+              disabled={
+                publicationLoading ||
+                !publication ||
+                !publication.title ||
+                !publication.abstract
+              }
             />
             <Button
-              onClick={() => handleSendMessage(inputValue)}
-              disabled={!inputValue.trim() || chatLoading}
+              onClick={() => {
+                if (publication && publication.title && publication.abstract) {
+                  handleSendMessage(inputValue);
+                }
+              }}
+              disabled={
+                !inputValue.trim() ||
+                chatLoading ||
+                publicationLoading ||
+                !publication ||
+                !publication.title ||
+                !publication.abstract
+              }
               className="bg-blue-500 hover:bg-blue-600 text-white rounded-xl h-10 w-10 p-0 flex items-center justify-center disabled:opacity-50"
             >
               <Send className="w-4 h-4" />
@@ -208,5 +271,5 @@ export default function ChatPage({ params }: { params: { id: string } }) {
         </div>
       </div>
     </div>
-  )
+  );
 }
