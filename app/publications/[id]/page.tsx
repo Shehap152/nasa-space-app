@@ -14,7 +14,7 @@ export default function PublicationDetailsPage({ params }: { params: { id: strin
   const [isFavorite, setIsFavorite] = useState(false)
   const [externalLink, setExternalLink] = useState<string | null>(null)
   const { publication, loading, error, fetchPublication } = usePublicationDetails()
-  const { publications: allPublications } = usePublications()
+  const { publications: allPublications, loading: listLoading } = usePublications()
   const { isFavorite: isFav, toggleFavorite } = useFavorites()
 
   useEffect(() => {
@@ -42,7 +42,9 @@ export default function PublicationDetailsPage({ params }: { params: { id: strin
     ? allPublications.filter((p) => publication.relatedStudies?.includes(p.id))
     : []
 
-  if (loading) {
+  const isInitializing = (loading || listLoading) || (!publication && !error && allPublications.length === 0)
+
+  if (isInitializing) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#0a1628] via-[#1a1a3e] to-[#2d1b4e] relative overflow-hidden">
         <SpaceBackground />

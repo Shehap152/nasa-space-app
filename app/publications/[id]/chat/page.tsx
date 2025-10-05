@@ -62,7 +62,9 @@ export default function ChatPage({ params }: { params: { id: string } }) {
     });
   };
 
-  if (publicationLoading) {
+  const isInitializing = publicationLoading || (!publication && !publicationError)
+
+  if (isInitializing) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#0a1628] via-[#1a1a3e] to-[#2d1b4e] relative overflow-hidden flex flex-col">
         <SpaceBackground />
